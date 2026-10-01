@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOrdersStore } from "../store/ordersStore";
 import { useAuthStore } from "../store/authStore";
 import { orderPackages } from "../data/seed";
@@ -31,6 +31,23 @@ export default function OrderModal({
   const [shipping, setShipping] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape" && !submitting) onClose();
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isOpen, onClose, submitting]);
 
   if (!isOpen) {
     return null;
@@ -116,21 +133,25 @@ export default function OrderModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] overflow-y-auto bg-black/70 px-3 py-4 backdrop-blur-sm sm:px-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !submitting) {
           onClose();
         }
       }}
     >
+      <div className="flex min-h-full items-center justify-center">
       <div
-        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-night-600 bg-night-800 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="order-modal-title"
+        className="my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-night-600 bg-night-800 shadow-2xl"
         dir="rtl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-night-600 p-6">
+        <div className="flex shrink-0 items-center justify-between border-b border-night-600 p-4 sm:p-6">
           <div>
-            <h2 className="text-2xl font-extrabold text-white">
+            <h2 id="order-modal-title" className="text-2xl font-extrabold text-white">
               إنشاء طلب جديد
             </h2>
 
@@ -152,7 +173,7 @@ export default function OrderModal({
 
         {/* Success */}
         {success ? (
-          <div className="p-10 text-center">
+          <div className="overflow-y-auto p-10 text-center">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-mint/15">
               <span className="text-3xl text-mint">
                 ✓
@@ -168,8 +189,8 @@ export default function OrderModal({
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-5 p-6">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-6">
               {/* Product Name */}
               <div>
                 <label
@@ -283,7 +304,7 @@ export default function OrderModal({
             </div>
 
             {/* Footer */}
-            <div className="flex gap-3 border-t border-night-600 p-6">
+            <div className="flex shrink-0 gap-3 border-t border-night-600 p-4 sm:p-6">
               <button
                 type="button"
                 onClick={onClose}
@@ -305,6 +326,7 @@ export default function OrderModal({
             </div>
           </form>
         )}
+      </div>
       </div>
     </div>
   );

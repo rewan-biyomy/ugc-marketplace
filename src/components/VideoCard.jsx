@@ -3,10 +3,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Play, BadgeCheck, Star } from "lucide-react";
 import { VIDEO_SOURCES } from "../data/seed";
+import { getCreatorWorks } from "../utils/portfolio";
 
 /** كارت فيديو طولي 9:16 مع تجربة مصادر تلقائية عند الفشل */
 export default function VideoCard({ creator }) {
-  const allSources = [...(creator.videos || []), ...VIDEO_SOURCES];
+  const creatorSources = getCreatorWorks(creator).map((work) => work.url);
+  const allSources = [...creatorSources, ...VIDEO_SOURCES];
   const [sourceIndex, setSourceIndex] = useState(0);
   const [failedAll, setFailedAll] = useState(false);
 

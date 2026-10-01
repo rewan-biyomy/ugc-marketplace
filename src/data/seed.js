@@ -3,7 +3,7 @@
  * اللهجات: كل دول الوطن العربي
  */
 export const VIDEO_SOURCES = [
-  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+  "https://pin.it/5UKaRZiQK",
   "https://www.w3schools.com/html/mov_bbb.mp4",
   "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
   "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
@@ -74,7 +74,7 @@ export const seedOrders = [
 // المحادثات الأولية
 export const seedConversations = [
   {
-    id: 1, name: "سارة", image: "https://i.pravatar.cc/150?img=47",
+    id: 1, name: "روان", image: "https://i.pinimg.com/736x/4d/c5/fd/4dc5fde6127f1b258eb2484a155d2535.jpg",
     messages: [
       { id: 1, from: "them", text: "أهلاً بك، وصلني طلبك الخاص بالفيديو الإعلاني", time: "10:30" },
       { id: 2, from: "me", text: "أهلاً سارة، أحتاج فيديوهات بمونتاج كامل لمنتج العطر", time: "10:32" },
