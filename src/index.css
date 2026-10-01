@@ -1,7 +1,14 @@
 @import "tailwindcss";
-@config "../../tailwind.config.js";
 
 @theme {
+  --color-navy-950: #001a33;
+  --color-navy-900: #00284d;
+  --color-navy-800: #003566;
+  --color-navy-700: #004380;
+  --color-navy-600: #0a5499;
+  --color-sage: #94d2bd;
+  --color-sage-dark: #76b8a2;
+  --color-sage-light: #bee8da;
   --color-night-600: #26344d;
   --color-night-700: #18243a;
   --color-night-800: #111b2e;
@@ -10,6 +17,7 @@
   --color-mint: #34d399;
   --color-mint-light: #6ee7b7;
   --color-mint-dark: #10b981;
+  --font-cairo: "Cairo", sans-serif;
 }
 
 body {
