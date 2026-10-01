@@ -6,7 +6,7 @@ import { useOrdersStore } from "../store/ordersStore";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Select from "../components/Select";
 
-const STATUS_OPTIONS = ["pending", "in_progress", "completed", "rejected"];
+const STATUS_OPTIONS = ["pending", "in_progress", "delivered", "completed", "rejected"];
 
 function AdminDashboardContent() {
   const { users, deleteUser } = useAuthStore();

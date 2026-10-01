@@ -1,33 +1,26 @@
 // src/components/VideoCard.jsx
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Play, BadgeCheck, Star } from "lucide-react";
-import { VIDEO_SOURCES } from "../data/seed";
+import { BadgeCheck, BriefcaseBusiness, Star } from "lucide-react";
+import MediaPreview from "./MediaPreview";
 import { getCreatorWorks } from "../utils/portfolio";
 
-/** كارت فيديو طولي 9:16 مع تجربة مصادر تلقائية عند الفشل */
+/** كارت يعرض عمل الصانع الحقيقي أو صورته عند عدم وجود أعمال منشورة */
 export default function VideoCard({ creator }) {
-  const creatorSources = getCreatorWorks(creator).map((work) => work.url);
-  const allSources = [...creatorSources, ...VIDEO_SOURCES];
-  const [sourceIndex, setSourceIndex] = useState(0);
-  const [failedAll, setFailedAll] = useState(false);
-
-  const handleError = () => {
-    if (sourceIndex < allSources.length - 1) setSourceIndex((i) => i + 1);
-    else setFailedAll(true);
-  };
+  const works = getCreatorWorks(creator);
+  const featuredWork = works[0];
 
   return (
     <Link to={`/profile/${creator.id}`}
       className="group relative block aspect-[9/16] overflow-hidden rounded-2xl border border-navy-600 bg-navy-900 transition-all duration-300 hover:scale-[1.03] hover:border-sage hover:shadow-[0_0_30px_rgba(148,210,189,0.25)]">
-      {failedAll ? (
+      {featuredWork ? (
+        <MediaPreview media={featuredWork} title={featuredWork.title} poster={creator.image} controls={false} linkFallback={false} className="absolute inset-0 h-full w-full object-cover" />
+      ) : creator.image ? (
         <img src={creator.image} alt={creator.name} className="absolute inset-0 h-full w-full object-cover" />
       ) : (
-        <video src={allSources[sourceIndex]} poster={creator.image} muted loop autoPlay playsInline
-          preload="metadata" onError={handleError} className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 flex items-center justify-center text-gray-500"><BriefcaseBusiness className="h-10 w-10" /></div>
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
 
       {/* شارة اللهجة */}
       <span className="absolute right-3 top-3 rounded-full border border-sage/30 bg-navy-950/80 px-3 py-1 text-xs font-semibold text-sage backdrop-blur">
@@ -35,14 +28,8 @@ export default function VideoCard({ creator }) {
       </span>
 
       {/* أيقونة تشغيل عند الـ Hover */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-sage">
-          <Play className="h-6 w-6 fill-navy-800 text-navy-800" />
-        </div>
-      </div>
-
       {/* المعلومات السفلية */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-4">
         <div className="mb-2 flex items-center gap-2">
           <img src={creator.image} alt={creator.name} className="h-8 w-8 rounded-full border-2 border-sage object-cover" />
           <h3 className="font-bold">{creator.name}</h3>

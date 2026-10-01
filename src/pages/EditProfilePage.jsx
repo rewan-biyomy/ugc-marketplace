@@ -5,7 +5,8 @@ import { useAuthStore } from "../store/authStore";
 import { dialects, niches, professions } from "../data/seed";
 import Select from "../components/Select";
 import ProtectedRoute from "../components/ProtectedRoute";
-import { createWorkId, getCreatorWorks } from "../utils/portfolio";
+import { createWorkId, getCreatorWorks, normalizeVideoUrl } from "../utils/portfolio";
+import { storeMediaFiles } from "../services/mediaStorage";
 
 /** صفحة تعديل البروفايل — كل الأدوار (عميل/صانع) */
 function EditProfileContent() {
@@ -21,8 +22,10 @@ function EditProfileContent() {
   const [works, setWorks] = useState(() => getCreatorWorks(user));
   const [workTitle, setWorkTitle] = useState("");
   const [workUrl, setWorkUrl] = useState("");
+  const [uploadingWorks, setUploadingWorks] = useState(false);
   const [editingWorkId, setEditingWorkId] = useState(null);
   const [workError, setWorkError] = useState("");
+  const [workSaved, setWorkSaved] = useState(false);
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -45,31 +48,47 @@ function EditProfileContent() {
     setWorkTitle("");
     setWorkUrl("");
     setWorkError("");
+    setWorkSaved(false);
   };
 
   const saveWork = () => {
-    const title = workTitle.trim();
-    const url = workUrl.trim();
-
-    if (!title || !url) {
-      setWorkError("أدخل عنوان العمل ورابط الفيديو.");
-      return;
-    }
-
-    try {
-      const parsedUrl = new URL(url);
-      if (!["http:", "https:"].includes(parsedUrl.protocol)) throw new Error();
-    } catch {
+    const url = normalizeVideoUrl(workUrl);
+    if (!url) {
       setWorkError("أدخل رابط فيديو صحيحًا يبدأ بـ https://.");
       return;
     }
 
+    const title = workTitle.trim() || `فيديو ${works.length + 1}`;
     const nextWorks = editingWorkId
       ? works.map((work) => work.id === editingWorkId ? { ...work, title, url } : work)
       : [...works, { id: createWorkId(), title, url }];
 
     saveWorks(nextWorks);
     resetWorkEditor();
+    setWorkSaved(true);
+  };
+
+  const handleWorkFiles = async (event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+
+    setUploadingWorks(true);
+    setWorkError("");
+    try {
+      const storedFiles = await storeMediaFiles(files);
+      const nextWorks = [...works, ...storedFiles.map((media, index) => ({
+        ...media,
+        id: createWorkId(),
+        title: media.fileName.replace(/\.[^.]+$/, "") || `عمل ${works.length + index + 1}`,
+      }))];
+      saveWorks(nextWorks);
+      setWorkSaved(true);
+    } catch (error) {
+      setWorkError(error.message || "تعذر حفظ الملفات.");
+    } finally {
+      setUploadingWorks(false);
+    }
   };
 
   const handleSave = () => {
@@ -128,9 +147,13 @@ function EditProfileContent() {
         )}
 
         {user.role === "creator" && <div>
-          <label className="mb-2 block text-sm font-semibold text-gray-300">أعمالي (روابط فيديو)</label>
+          <label className="mb-2 block text-sm font-semibold text-gray-300">أعمالي (صور وفيديوهات)</label>
+          <input type="file" accept="image/*,video/*" multiple disabled={uploadingWorks} onChange={handleWorkFiles}
+            className="mb-3 block w-full rounded-xl border border-navy-600 bg-navy-950 px-4 py-3 text-sm text-gray-300 file:ml-3 file:rounded-lg file:border-0 file:bg-sage file:px-3 file:py-2 file:font-bold file:text-navy-800 disabled:opacity-60" />
+          {uploadingWorks && <p role="status" className="mb-3 text-sm text-gray-400">جارٍ حفظ الأعمال...</p>}
+          <p className="mb-3 text-xs text-gray-500">يمكنك أيضًا إضافة رابط فيديو مباشر أو رابط مشاركة.</p>
           <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_1.4fr_auto_auto]">
-            <input placeholder="عنوان العمل" value={workTitle} onChange={(e) => setWorkTitle(e.target.value)} className={inputCls} />
+            <input placeholder="عنوان العمل (اختياري)" value={workTitle} onChange={(e) => setWorkTitle(e.target.value)} className={inputCls} />
             <input placeholder="رابط الفيديو" value={workUrl} onChange={(e) => setWorkUrl(e.target.value)} className={inputCls} dir="ltr" />
             <button type="button" onClick={saveWork} title={editingWorkId ? "حفظ العمل" : "إضافة العمل"}
               className="flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-3 font-bold text-navy-800 transition-colors hover:bg-sage-light">
@@ -143,16 +166,17 @@ function EditProfileContent() {
             </button>}
           </div>
           {workError && <p role="alert" className="mb-3 text-sm text-red-400">{workError}</p>}
+          {workSaved && <p role="status" className="mb-3 text-sm text-emerald-400">تم حفظ العمل وسيظهر في ملفك العام.</p>}
           {works.map((work) => (
             <div key={work.id} className="mb-2 flex min-w-0 items-center justify-between gap-3 rounded-xl border border-navy-600 bg-navy-950 px-4 py-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{work.title}</p>
-                <p dir="ltr" className="truncate text-left text-xs text-gray-400">{work.url}</p>
+                <p dir="ltr" className="truncate text-left text-xs text-gray-400">{work.url || work.fileName}</p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button type="button" title="تعديل العمل" aria-label={`تعديل ${work.title}`}
+                {work.url && <button type="button" title="تعديل العمل" aria-label={`تعديل ${work.title}`}
                   onClick={() => { setEditingWorkId(work.id); setWorkTitle(work.title); setWorkUrl(work.url); setWorkError(""); }}
-                  className="rounded-lg p-2 text-gray-300 hover:bg-navy-700 hover:text-sage"><Pencil className="h-4 w-4" /></button>
+                  className="rounded-lg p-2 text-gray-300 hover:bg-navy-700 hover:text-sage"><Pencil className="h-4 w-4" /></button>}
                 <button type="button" title="حذف العمل" aria-label={`حذف ${work.title}`}
                   onClick={() => { saveWorks(works.filter((item) => item.id !== work.id)); if (editingWorkId === work.id) resetWorkEditor(); }}
                   className="rounded-lg p-2 text-red-400 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>

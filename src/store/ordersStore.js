@@ -25,6 +25,21 @@ export const useOrdersStore = create(
             order.id === orderId ? { ...order, status } : order
           ),
         })),
+
+      deliverOrder: (orderId, delivery) =>
+        set((state) => ({
+          orders: state.orders.map((order) =>
+            order.id === orderId
+              ? {
+                  ...order,
+                  status: "delivered",
+                  deliveredUrl: delivery.url || "",
+                  deliveredMedia: delivery.media || [],
+                  deliveredAt: new Date().toISOString().slice(0, 10),
+                }
+              : order
+          ),
+        })),
     }),
     { name: "ugc-orders" }
   )

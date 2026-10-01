@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { BadgeCheck, Star, ArrowRight, LogIn, Pencil, Play, BriefcaseBusiness } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import OrderBox from "../components/OrderBox";
+import MediaPreview from "../components/MediaPreview";
 import { getCreatorWorks } from "../utils/portfolio";
 
 /** البروفايل العام لصانع المحتوى — مع بوكس الطلب */
@@ -59,14 +60,14 @@ export default function ProfilePage() {
               <p className="mb-1 text-xs font-bold uppercase text-sage">Portfolio</p>
               <h2 id="portfolio-heading" className="text-2xl font-extrabold">معرض الأعمال</h2>
             </div>
-            <span className="text-sm text-gray-400">{works.length} فيديو</span>
+            <span className="text-sm text-gray-400">{works.length} عمل</span>
           </div>
           {works.length ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {works.map((work) => (
                 <article key={work.id} className="group overflow-hidden rounded-xl border border-white/10 bg-navy-900 transition-colors hover:border-sage/50">
                   <div className="relative aspect-[9/16] bg-black">
-                    <video src={work.url} poster={creator.image} controls playsInline preload="metadata" className="h-full w-full object-cover" />
+                    <MediaPreview media={work} title={work.title} poster={creator.image} className="h-full w-full object-cover" />
                     <span aria-hidden="true" className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/60 p-2 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100"><Play className="h-4 w-4" /></span>
                   </div>
                   <h3 className="truncate px-3 py-3 text-sm font-bold">{work.title}</h3>

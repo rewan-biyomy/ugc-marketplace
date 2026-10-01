@@ -6,15 +6,17 @@ import { useAuthStore } from "../store/authStore";
 import { useOrdersStore } from "../store/ordersStore";
 import ProtectedRoute from "../components/ProtectedRoute";
 import StatusBadge from "../components/StatusBadge";
+import MediaPreview from "../components/MediaPreview";
 
 const TABS = [
   { key: "all", label: "الكل" }, { key: "pending", label: "قيد الانتظار" },
-  { key: "in_progress", label: "جاري التنفيذ" }, { key: "completed", label: "مكتمل" },
+  { key: "in_progress", label: "جاري التنفيذ" }, { key: "delivered", label: "بانتظار موافقتك" }, { key: "completed", label: "مكتمل" },
 ];
 
 function ClientDashboardContent() {
   const user = useAuthStore((s) => s.user);
   const allOrders = useOrdersStore((s) => s.orders);
+  const approveDelivery = useOrdersStore((s) => s.updateStatus);
   const orders = allOrders.filter((order) => order.clientId === user.id);
   const [tab, setTab] = useState("all");
   const filtered = tab === "all" ? orders : orders.filter((o) => o.status === tab);
@@ -55,6 +57,29 @@ function ClientDashboardContent() {
                 <span className="text-lg font-extrabold text-sage">{o.total} ج.م</span>
                 <StatusBadge status={o.status} />
               </div>
+              {o.status === "delivered" && (o.deliveredUrl || o.deliveredMedia?.length > 0) && (
+                <div className="w-full border-t border-navy-600 pt-4">
+                  <h4 className="mb-3 font-bold">ملفات المشروع المستلمة</h4>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {(o.deliveredMedia || []).map((media) => (
+                      <div key={media.assetId} className="min-w-0 overflow-hidden rounded-xl border border-navy-600 bg-navy-950">
+                        <div className="aspect-video bg-black">
+                          <MediaPreview media={media} title={media.fileName} className="h-full w-full object-contain" />
+                        </div>
+                        <p className="truncate px-3 py-2 text-sm text-gray-300">{media.fileName}</p>
+                      </div>
+                    ))}
+                    {o.deliveredUrl && (
+                      <div className="aspect-video overflow-hidden rounded-xl bg-black">
+                        <MediaPreview media={o.deliveredUrl} title={`تسليم ${o.productName}`} className="h-full w-full object-contain" />
+                      </div>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => approveDelivery(o.id, "completed")} className="mt-4 rounded-xl bg-sage px-5 py-3 font-bold text-navy-800 hover:bg-sage-light">
+                    موافقة على المشروع
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
